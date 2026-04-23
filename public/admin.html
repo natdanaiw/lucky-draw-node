@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucky Draw — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="adminMessage" class="admin-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="history-page">
+    <div class="history-page-card">
+      <div class="history-page-header">
+        <div class="history-page-title">
+          <h1>🛠️ Admin Dashboard</h1>
+          <p>ดูประวัติการแจกของรางวัล จัดการ stock และเพิ่มของรางวัลใหม่ผ่านฐานข้อมูล SQLite</p>
+        </div>
+        <div class="history-page-actions">
+          <a class="restart-btn history-page-link" href="/">← กลับหน้าลงทะเบียน</a>
+          <a class="restart-btn history-page-link" href="history.html">📋 ดูหน้า History</a>
+        </div>
+      </div>
+
+      <div class="history-page-body">
+        <div class="admin-panel">
+          <div class="admin-toolbar">
+            <div>
+              <h2>จัดการ Stock ของรางวัล</h2>
+              <p>หน้านี้ใช้จัดการ stock เท่านั้น ส่วนประวัติและหมายเหตุย้ายไปที่หน้า History แล้ว</p>
+            </div>
+            <div class="admin-toolbar-actions">
+              <button type="button" class="submit-btn admin-add-btn" id="openPrizeModalBtn">+ เพิ่มของรางวัล</button>
+              <button type="button" class="history-btn admin-danger-btn" id="openClearStockModalBtn">เคลียร์ Stock ทั้งหมด</button>
+            </div>
+          </div>
+
+          <div class="admin-import-row">
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" class="admin-csv-input" />
+            <button type="button" class="history-btn admin-import-btn" id="importCsvBtn">Import CSV</button>
+          </div>
+          <p class="admin-import-hint">รูปแบบ CSV: name,unit,quantity (รองรับแถวแรกเป็น header)</p>
+        </div>
+
+        <div class="admin-panel admin-section">
+          <div class="admin-section-title">Stock ปัจจุบัน</div>
+          <div class="admin-table-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>รางวัล</th>
+                  <th>หน่วย</th>
+                  <th>คงเหลือ</th>
+                  <th>ปรับจำนวน</th>
+                </tr>
+              </thead>
+              <tbody id="stockBody">
+                <tr>
+                  <td colspan="5" class="history-status">กำลังโหลด...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="prizeModal" class="modal-backdrop">
+    <div class="modal-card admin-prize-modal">
+      <div class="modal-header">
+        <h3>เพิ่มของรางวัล</h3>
+        <button class="modal-close" id="closePrizeModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="adminPrizeForm" class="admin-form">
+          <div class="form-group">
+            <label for="prizeName">ชื่อรางวัล</label>
+            <input type="text" id="prizeName" placeholder="เช่น แก้วน้ำ" />
+          </div>
+
+          <div class="form-group">
+            <label for="prizeUnit">หน่วย</label>
+            <input type="text" id="prizeUnit" placeholder="เช่น ใบ" />
+          </div>
+
+          <div class="form-group">
+            <label for="prizeQuantity">จำนวน</label>
+            <input type="number" id="prizeQuantity" min="1" step="1" placeholder="เช่น 10" />
+          </div>
+
+          <button type="submit" class="submit-btn">บันทึกของรางวัล</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="clearStockModal" class="modal-backdrop">
+    <div class="modal-card admin-prize-modal">
+      <div class="modal-header">
+        <h3>ยืนยันการเคลียร์ Stock</h3>
+        <button class="modal-close" id="closeClearStockModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="admin-import-hint">การทำรายการนี้จะลบรายชื่อของรางวัลทั้งหมดออกจาก stock ทันที</p>
+        <button type="button" class="history-btn admin-danger-btn" id="confirmClearStockBtn">ยืนยันเคลียร์ทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adjustQuantityModal" class="modal-backdrop">
+    <div class="modal-card admin-prize-modal">
+      <div class="modal-header">
+        <h3>ปรับจำนวนรางวัล</h3>
+        <button class="modal-close" id="closeAdjustQuantityModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="adjustQuantityForm" class="admin-form">
+          <div class="form-group">
+            <label for="adjustPrizeName">ชื่อรางวัล</label>
+            <input type="text" id="adjustPrizeName" disabled />
+          </div>
+
+          <div class="form-group">
+            <label for="adjustQuantityInput">จำนวนใหม่</label>
+            <input type="number" id="adjustQuantityInput" min="0" step="1" placeholder="ตั้งเป็น 0 เพื่อลบรางวัล" />
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="confirmAdjustCheckbox" />
+              ฉันยืนยันว่าต้องการปรับจำนวน
+            </label>
+          </div>
+
+          <button type="submit" class="submit-btn">บันทึกการปรับจำนวน</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

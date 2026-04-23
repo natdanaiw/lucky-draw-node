@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucky Draw — ลุ้นรับของรางวัล</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== SCREEN 1: FORM ===== -->
+    <div id="form-screen" class="screen active">
+      <div class="form-card">
+        <div class="form-logo">
+          <span class="star-icon">🎁</span>
+          <h1>ลุ้นรับของรางวัล</h1>
+          <p>กรอกข้อมูลเพื่อรับสิทธิ์ลุ้นของรางวัลสุดพิเศษ</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fname">ชื่อ</label>
+            <input type="text" id="fname" placeholder="ชื่อจริง" />
+          </div>
+          <div class="form-group">
+            <label for="lname">นามสกุล</label>
+            <input type="text" id="lname" placeholder="นามสกุล" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">เบอร์โทรศัพท์</label>
+          <input type="tel" id="phone" placeholder="08X-XXX-XXXX" pattern="0[0-9]{9}" title="กรอกเบอร์โทรศัพท์ 10 หลักขึ้นต้นด้วย 0" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">อีเมล</label>
+          <input type="email" id="email" placeholder="example@email.com" pattern="[^\s@]+@[^\s@]+\.[^\s@]+" title="กรอกอีเมลในรูปแบบ name@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="company">บริษัท / องค์กร</label>
+          <input type="text" id="company" placeholder="ชื่อบริษัท" />
+        </div>
+
+        <div class="form-group">
+          <label for="position">ตำแหน่งงาน</label>
+          <select id="position">
+            <option value="">-- เลือกตำแหน่งงาน --</option>
+            <option>IT Manager</option>
+            <option>IT Director</option>
+            <option>Chief Information Officer (CIO)</option>
+            <option>Chief Technology Officer (CTO)</option>
+            <option>IT Administrator</option>
+            <option>System Administrator</option>
+            <option>Infrastructure Engineer</option>
+            <option>Network Engineer</option>
+            <option>Cloud Engineer</option>
+            <option>Cloud Architect</option>
+            <option>Solutions Architect</option>
+            <option>Enterprise Architect</option>
+            <option>DevOps Engineer</option>
+            <option>Site Reliability Engineer (SRE)</option>
+            <option>Platform Engineer</option>
+            <option>Software Engineer</option>
+            <option>Application Developer</option>
+            <option>Data Engineer</option>
+            <option>Data Analyst</option>
+            <option>Database Administrator (DBA)</option>
+            <option>Cybersecurity Engineer</option>
+            <option>Security Analyst</option>
+            <option>IT Consultant</option>
+            <option>Project Manager (IT)</option>
+            <option>Technical Presales / Presales Engineer</option>
+            <option>Technical Support / Support Engineer</option>
+            <option>อื่นๆ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="interest">ความสนใจ</label>
+          <select id="interest">
+            <option value="">-- เลือกความสนใจ --</option>
+            <option>นัดคุยรายละเอียดเพิ่มเติม</option>
+            <option>ทำ POC / Pilot</option>
+            <option>นัด Technical Meeting</option>
+            <option>ขอ Demo / นำเสนอเพิ่มเติม</option>
+            <option>ขอใบเสนอราคา (Proposal)</option>
+            <option>อื่นๆ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="note">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+          <textarea id="note" rows="3" maxlength="500" placeholder="เช่น สนใจทำ POC, นัด technical meeting เพิ่มเติม, หรือให้ทีมติดต่อกลับ"></textarea>
+        </div>
+
+        <button class="submit-btn" id="submitBtn">🎲 ลุ้นรับของรางวัล</button>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN 2: LOADING / ANIMATION ===== -->
+    <div id="loading-screen" class="screen">
+      <div class="box-container">
+        <div class="prize-box" id="prizeBox">
+          <div class="sparkle-container" id="sparkles"></div>
+          <div class="box-lid" id="boxLid">
+            <div class="bow-h">
+              <div class="bow-left"></div>
+              <div class="bow-right"></div>
+            </div>
+          </div>
+          <div class="box-body"></div>
+        </div>
+      </div>
+      <p class="loading-label">
+        กำลังสุ่มรางวัล<span class="dots">
+          <span>.</span><span>.</span><span>.</span>
+        </span>
+      </p>
+    </div>
+
+    <!-- ===== SCREEN 3: RESULT ===== -->
+    <div id="result-screen" class="screen">
+      <div class="result-header">
+        <span class="trophy">🏆</span>
+        <p class="congrats-text">ยินดีด้วย!</p>
+        <p class="customer-name" id="winnerName"></p>
+      </div>
+
+      <div class="prize-reveal">
+        <div class="prize-label">คุณได้รับรางวัล</div>
+        <span class="prize-icon-big" id="prizeIcon"></span>
+        <div class="prize-name" id="prizeName"></div>
+        <div class="prize-qty" id="prizeQty"></div>
+      </div>
+
+      <div class="stock-summary" id="stockSummary"></div>
+      <button class="restart-btn" id="restartBtn">← ลุ้นคนต่อไป</button>
+    </div>
+
+    <!-- ===== SCREEN 4: DUPLICATE WARNING ===== -->
+    <div id="duplicate-screen" class="screen">
+      <div class="dup-card">
+        <span class="dup-icon">⚠️</span>
+        <h2 class="dup-title">เคยรับรางวัลแล้ว</h2>
+        <p class="dup-desc">หมายเลขโทรศัพท์นี้เคยร่วมกิจกรรมและรับรางวัลไปแล้ว</p>
+        <div class="dup-info">
+          <div class="dup-row">
+            <span class="dup-label">ชื่อ</span>
+            <span class="dup-value" id="dupName"></span>
+          </div>
+          <div class="dup-row">
+            <span class="dup-label">รางวัลที่ได้รับ</span>
+            <span class="dup-value" id="dupPrize"></span>
+          </div>
+          <div class="dup-row">
+            <span class="dup-label">วันเวลาที่รับ</span>
+            <span class="dup-value" id="dupDate"></span>
+          </div>
+        </div>
+        <button class="restart-btn" id="dupRestartBtn">← กลับหน้าหลัก</button>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+  <script src="js/app.js"></script>
+</body>
+</html>

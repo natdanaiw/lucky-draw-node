@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucky Draw — ประวัติผู้รับรางวัล</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="history-page">
+    <div class="history-page-card">
+      <div class="history-page-header">
+        <div class="history-page-title">
+          <h1>📋 ประวัติผู้รับรางวัล</h1>
+          <p>แสดงประวัติผู้รับรางวัล พร้อมหมายเหตุลูกค้าและบันทึกทีมงานหลังบ้าน</p>
+        </div>
+        <div class="history-page-actions">
+          <a class="restart-btn history-page-link" href="/">← กลับหน้าลงทะเบียน</a>
+          <a class="restart-btn history-page-link" href="admin.html">🛠️ ไปหน้า Admin Stock</a>
+        </div>
+      </div>
+
+      <div class="history-page-body">
+        <div class="history-tools">
+          <input type="text" id="historySearchInput" class="history-search-input" placeholder="ค้นหา ชื่อ/เบอร์/บริษัท/ตำแหน่ง/หมายเหตุ/รางวัล" />
+          <button type="button" id="exportHistoryCsvBtn" class="history-btn history-export-btn">Export CSV</button>
+          <button type="button" id="openClearHistoryModalBtn" class="history-btn admin-danger-btn history-export-btn">ล้างประวัติทั้งหมด</button>
+        </div>
+
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>เบอร์โทร</th>
+              <th>บริษัท</th>
+              <th>ตำแหน่ง</th>
+              <th>หมายเหตุลูกค้า</th>
+              <th>บันทึกทีมงาน</th>
+              <th>รางวัล</th>
+              <th>วันเวลา</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="9" class="history-status">กำลังโหลด...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="clearHistoryModal" class="modal-backdrop">
+    <div class="modal-card admin-prize-modal">
+      <div class="modal-header">
+        <h3>ยืนยันการล้างประวัติ</h3>
+        <button class="modal-close" id="closeClearHistoryModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="admin-import-hint">การทำรายการนี้จะลบประวัติผู้รับรางวัลทั้งหมดออกจากระบบทันที</p>
+        <button type="button" class="history-btn admin-danger-btn" id="confirmClearHistoryBtn">ยืนยันล้างประวัติทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/history.js"></script>
+</body>
+</html>
