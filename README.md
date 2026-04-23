@@ -122,3 +122,33 @@ const INITIAL_PRIZES = [
 | GET    | /api/check/:phone  | ตรวจสอบว่าเบอร์นี้เคยสุ่มแล้วหรือไม่ |
 | POST   | /api/draw          | สุ่มรางวัล + บันทึกประวัติ        |
 | GET    | /api/history       | ดูประวัติผู้รับรางวัลทั้งหมด      |
+
+---
+
+## โหมด Hybrid: Cloudflare D1 + SQLite Fallback
+
+ระบบรองรับการใช้ Cloudflare D1 เป็นฐานข้อมูลหลัก และ fallback ไป SQLite อัตโนมัติเมื่อ D1 ไม่พร้อมใช้งาน
+
+1. คัดลอกไฟล์ `.env.example` เป็น `.env`
+2. ตั้งค่าให้เปิดใช้ D1
+3. ใส่ค่า Cloudflare D1 credentials
+
+ตัวอย่าง:
+
+```env
+CF_D1_ENABLED=true
+CF_D1_ACCOUNT_ID=your_account_id
+CF_D1_DATABASE_ID=your_database_id
+CF_D1_API_TOKEN=your_api_token
+```
+
+ถ้าไม่ต้องการใช้ D1 ให้ตั้ง:
+
+```env
+CF_D1_ENABLED=false
+```
+
+หมายเหตุ:
+
+- เมื่อ D1 ล่มระหว่างรัน ระบบจะ fallback ไป SQLite (`database.db`) ทันที
+- หากต้องการกลับไปใช้ D1 หลังแก้ปัญหา ให้ restart server

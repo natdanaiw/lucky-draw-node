@@ -3,8 +3,27 @@
  * Express server + SQLite backend สำหรับ Lucky Draw
  */
 
+const fs = require('fs');
 const express = require('express');
 const path    = require('path');
+
+// โหลดค่า .env แบบไม่พึ่ง dependency เพิ่มเติม
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const sep = trimmed.indexOf('=');
+    if (sep <= 0) continue;
+    const key = trimmed.slice(0, sep).trim();
+    const value = trimmed.slice(sep + 1).trim();
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
+
 const db      = require('./db');
 
 const app  = express();
@@ -30,30 +49,33 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── API: ตรวจสอบเบอร์ซ้ำ ─────────────────────────────────────
-app.get('/api/check/:phone', (req, res) => {
-  const phone = normalizePhone(req.params.phone);
-  const row   = db.findByPhone(phone);
-  if (row) {
-    res.json({ duplicate: true, field: 'phone', record: row });
-  } else {
+app.get('/api/check/:phone', async (req, res) => {
+  try {
+    const phone = normalizePhone(req.params.phone);
+    const row = await db.findByPhone(phone);
+    if (row) {
+      return res.json({ duplicate: true, field: 'phone', record: row });
+    }
     res.json({ duplicate: false });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'ตรวจสอบข้อมูลซ้ำไม่สำเร็จ' });
   }
 });
 
 // ─── API: ตรวจสอบอีเมล/เบอร์ซ้ำก่อนบันทึก ─────────────────────
-function findDuplicateRecord(phoneInput, emailInput) {
+async function findDuplicateRecord(phoneInput, emailInput) {
   const phone = normalizePhone(phoneInput);
   const email = normalizeEmail(emailInput);
 
   if (phone) {
-    const phoneRecord = db.findByPhone(phone);
+    const phoneRecord = await db.findByPhone(phone);
     if (phoneRecord) {
       return { duplicate: true, field: 'phone', record: phoneRecord };
     }
   }
 
   if (email) {
-    const emailRecord = db.findByEmail(email);
+    const emailRecord = await db.findByEmail(email);
     if (emailRecord) {
       return { duplicate: true, field: 'email', record: emailRecord };
     }
@@ -62,27 +84,39 @@ function findDuplicateRecord(phoneInput, emailInput) {
   return { duplicate: false };
 }
 
-app.get('/api/check-duplicate', (req, res) => {
-  const result = findDuplicateRecord(req.query?.phone, req.query?.email);
-  res.json(result);
+app.get('/api/check-duplicate', async (req, res) => {
+  try {
+    const result = await findDuplicateRecord(req.query?.phone, req.query?.email);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'ตรวจสอบข้อมูลซ้ำไม่สำเร็จ' });
+  }
 });
 
-app.post('/api/check-duplicate', (req, res) => {
-  const result = findDuplicateRecord(req.body?.phone, req.body?.email);
-  res.json(result);
+app.post('/api/check-duplicate', async (req, res) => {
+  try {
+    const result = await findDuplicateRecord(req.body?.phone, req.body?.email);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'ตรวจสอบข้อมูลซ้ำไม่สำเร็จ' });
+  }
 });
 
 // ─── API: ดึง stock ───────────────────────────────────────────
-app.get('/api/stock', (req, res) => {
-  res.json(db.getStock());
+app.get('/api/stock', async (req, res) => {
+  try {
+    res.json(await db.getStock());
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'โหลด stock ไม่สำเร็จ' });
+  }
 });
 
 // ─── API: เพิ่มของรางวัล / เติม stock ─────────────────────────
-app.post('/api/admin/prizes', (req, res) => {
+app.post('/api/admin/prizes', async (req, res) => {
   const { name, unit, quantity } = req.body || {};
 
   try {
-    const prize = db.addPrize({ name, unit, quantity });
+    const prize = await db.addPrize({ name, unit, quantity });
     res.status(201).json({ message: 'บันทึกของรางวัลเรียบร้อย', prize });
   } catch (error) {
     res.status(400).json({ error: error.message || 'บันทึกของรางวัลไม่สำเร็จ' });
@@ -90,14 +124,17 @@ app.post('/api/admin/prizes', (req, res) => {
 });
 
 // ─── API: import ของรางวัลผ่าน CSV (แปลงเป็น JSON ฝั่ง client) ──
-app.post('/api/admin/prizes/import', (req, res) => {
+app.post('/api/admin/prizes/import', async (req, res) => {
   const items = Array.isArray(req.body?.items) ? req.body.items : [];
   if (items.length === 0) {
     return res.status(400).json({ error: 'ไม่พบข้อมูลสำหรับ import' });
   }
 
   try {
-    const results = items.map(item => db.addPrize(item));
+    const results = [];
+    for (const item of items) {
+      results.push(await db.addPrize(item));
+    }
     res.status(201).json({
       message: `นำเข้าของรางวัลสำเร็จ ${results.length} รายการ`,
       count: results.length
@@ -108,12 +145,12 @@ app.post('/api/admin/prizes/import', (req, res) => {
 });
 
 // ─── API: ปรับปรุงจำนวน stock ─────────────────────────────────
-app.patch('/api/admin/stock/:id', (req, res) => {
+app.patch('/api/admin/stock/:id', async (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body || {};
 
   try {
-    const result = db.updateStock(id, quantity);
+    const result = await db.updateStock(id, quantity);
     if (result.deleted) {
       res.json({
         message: 'ลบรางวัลออกจาก stock เรียบร้อย',
@@ -134,9 +171,9 @@ app.patch('/api/admin/stock/:id', (req, res) => {
 });
 
 // ─── API: เคลียร์ stock ทั้งหมด ──────────────────────────────
-app.post('/api/admin/stock/clear', (req, res) => {
+app.post('/api/admin/stock/clear', async (req, res) => {
   try {
-    const changedRows = db.clearStock();
+    const changedRows = await db.clearStock();
     res.json({
       message: `ลบรายการของรางวัลออกจาก stock เรียบร้อย (${changedRows} รายการ)`
     });
@@ -146,9 +183,9 @@ app.post('/api/admin/stock/clear', (req, res) => {
 });
 
 // ─── API: ล้างประวัติผู้รับรางวัลทั้งหมด ───────────────────────
-app.post('/api/admin/history/clear', (req, res) => {
+app.post('/api/admin/history/clear', async (req, res) => {
   try {
-    const changedRows = db.clearHistory();
+    const changedRows = await db.clearHistory();
     res.json({
       message: `ลบประวัติผู้รับรางวัลเรียบร้อย (${changedRows} รายการ)`
     });
@@ -158,12 +195,12 @@ app.post('/api/admin/history/clear', (req, res) => {
 });
 
 // ─── API: บันทึกโน้ตทีมงานหลังบ้าน ─────────────────────────
-app.patch('/api/admin/history/:id/admin-note', (req, res) => {
+app.patch('/api/admin/history/:id/admin-note', async (req, res) => {
   const { id } = req.params;
   const { adminNote } = req.body || {};
 
   try {
-    const record = db.updateAdminNote(id, adminNote);
+    const record = await db.updateAdminNote(id, adminNote);
     res.json({ message: 'บันทึกหมายเหตุทีมงานเรียบร้อย', record });
   } catch (error) {
     const message = error.message || 'บันทึกหมายเหตุทีมงานไม่สำเร็จ';
@@ -173,7 +210,7 @@ app.patch('/api/admin/history/:id/admin-note', (req, res) => {
 });
 
 // ─── API: สุ่มรางวัล + บันทึกประวัติ ─────────────────────────
-app.post('/api/draw', (req, res) => {
+app.post('/api/draw', async (req, res) => {
   const fields = req.body;
 
   // validate required fields
@@ -195,32 +232,40 @@ app.post('/api/draw', (req, res) => {
     return res.status(400).json({ error: 'หมายเหตุยาวเกินไป (ไม่เกิน 500 ตัวอักษร)' });
   }
 
-  // เช็คซ้ำอีกครั้งฝั่ง server
-  const phone = normalizePhone(fields.phone);
-  const email = normalizeEmail(fields.email);
-  if (db.findByPhone(phone)) {
-    return res.status(409).json({ error: 'เบอร์นี้เคยรับรางวัลแล้ว' });
+  try {
+    // เช็คซ้ำอีกครั้งฝั่ง server
+    const phone = normalizePhone(fields.phone);
+    const email = normalizeEmail(fields.email);
+    if (await db.findByPhone(phone)) {
+      return res.status(409).json({ error: 'เบอร์นี้เคยรับรางวัลแล้ว' });
+    }
+
+    if (await db.findByEmail(email)) {
+      return res.status(409).json({ error: 'อีเมลนี้เคยรับรางวัลแล้ว' });
+    }
+
+    // สุ่มรางวัล
+    const prize = await db.drawPrize();
+    if (!prize) {
+      return res.status(410).json({ error: 'ของรางวัลหมดแล้ว' });
+    }
+
+    // บันทึกประวัติ
+    await db.saveHistory({ ...fields, phone, email, note, prize: prize.name, unit: prize.unit, icon: prize.icon });
+
+    res.json({ prize });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'บันทึกข้อมูลไม่สำเร็จ' });
   }
-
-  if (db.findByEmail(email)) {
-    return res.status(409).json({ error: 'อีเมลนี้เคยรับรางวัลแล้ว' });
-  }
-
-  // สุ่มรางวัล
-  const prize = db.drawPrize();
-  if (!prize) {
-    return res.status(410).json({ error: 'ของรางวัลหมดแล้ว' });
-  }
-
-  // บันทึกประวัติ
-  db.saveHistory({ ...fields, phone, email, note, prize: prize.name, unit: prize.unit, icon: prize.icon });
-
-  res.json({ prize });
 });
 
 // ─── API: ดูประวัติทั้งหมด ─────────────────────────────────────
-app.get('/api/history', (req, res) => {
-  res.json(db.getHistory());
+app.get('/api/history', async (req, res) => {
+  try {
+    res.json(await db.getHistory());
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'โหลดประวัติไม่สำเร็จ' });
+  }
 });
 
 // ─── Start ────────────────────────────────────────────────────
