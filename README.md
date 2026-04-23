@@ -137,6 +137,7 @@ const INITIAL_PRIZES = [
 
 ```env
 CF_D1_ENABLED=true
+CF_D1_MODE=rest
 CF_D1_ACCOUNT_ID=your_account_id
 CF_D1_DATABASE_ID=your_database_id
 CF_D1_API_TOKEN=your_api_token
@@ -152,3 +153,26 @@ CF_D1_ENABLED=false
 
 - เมื่อ D1 ล่มระหว่างรัน ระบบจะ fallback ไป SQLite (`database.db`) ทันที
 - หากต้องการกลับไปใช้ D1 หลังแก้ปัญหา ให้ restart server
+
+### โหมดที่รองรับ
+
+1. `CF_D1_MODE=rest`
+ใช้กับ Node/Express แบบปัจจุบัน โดย `db.js` จะเรียก Cloudflare D1 ผ่าน REST API
+
+2. `CF_D1_MODE=binding`
+ใช้กับ Cloudflare Worker / Pages Functions โดยต้อง inject binding ก่อนใช้งาน เช่น
+
+```js
+const db = require('./db');
+
+export default {
+  async fetch(request, env) {
+    db.configureD1Binding(env.DB);
+    const stock = await db.getStock();
+    return Response.json(stock);
+  }
+};
+```
+
+3. เว้น `CF_D1_MODE` ว่าง
+ระบบจะเลือก remote mode ที่พร้อมใช้งานให้เอง และ fallback ไป SQLite ถ้า D1 ใช้ไม่ได้

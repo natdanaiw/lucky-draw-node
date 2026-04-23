@@ -268,6 +268,20 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
+// ─── API: Debug current database mode ──────────────────────────
+app.get('/api/admin/db-mode', (req, res) => {
+  res.json({
+    mode: db.getDbMode(),
+    d1Enabled: String(process.env.CF_D1_ENABLED || '').toLowerCase() === 'true',
+    d1Mode: process.env.CF_D1_MODE || 'auto',
+    hasD1RestCredentials: Boolean(
+      process.env.CF_D1_ACCOUNT_ID &&
+      process.env.CF_D1_DATABASE_ID &&
+      process.env.CF_D1_API_TOKEN
+    )
+  });
+});
+
 // ─── Start ────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🎁 Lucky Draw พร้อมใช้งานที่ http://localhost:${PORT}\n`);
