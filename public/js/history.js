@@ -1,5 +1,12 @@
 let allHistoryRecords = [];
 let filteredHistoryRecords = [];
+const HISTORY_COLSPAN = 10;
+let pendingDeleteHistoryId = null;
+let pendingDeleteButton = null;
+
+function authFetch(url, options) {
+  return window.Auth.authFetch(url, options);
+}
 
 function openClearHistoryModal() {
   document.getElementById('clearHistoryModal').classList.add('open');
@@ -7,6 +14,26 @@ function openClearHistoryModal() {
 
 function closeClearHistoryModal() {
   document.getElementById('clearHistoryModal').classList.remove('open');
+}
+
+function openDeleteHistoryModal(recordId, buttonRef) {
+  const historyId = Number(recordId);
+  if (!Number.isInteger(historyId) || historyId <= 0) {
+    setHistoryMessage('รหัสประวัติไม่ถูกต้อง', 'error');
+    return;
+  }
+
+  pendingDeleteHistoryId = historyId;
+  pendingDeleteButton = buttonRef || null;
+  document.getElementById('confirmDeleteHistoryBtn').textContent = 'ยืนยันลบรายการนี้';
+  document.getElementById('confirmDeleteHistoryBtn').disabled = false;
+  document.getElementById('deleteHistoryModal').classList.add('open');
+}
+
+function closeDeleteHistoryModal() {
+  document.getElementById('deleteHistoryModal').classList.remove('open');
+  pendingDeleteHistoryId = null;
+  pendingDeleteButton = null;
 }
 
 function escapeHtml(value) {
@@ -20,7 +47,7 @@ function escapeHtml(value) {
 
 function setHistoryMessage(message, tone) {
   const tbody = document.getElementById('historyBody');
-  tbody.innerHTML = `<tr><td colspan="9" class="history-status${tone ? ` ${tone}` : ''}">${message}</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="${HISTORY_COLSPAN}" class="history-status${tone ? ` ${tone}` : ''}">${message}</td></tr>`;
 }
 
 function toDateTimeText(dateValue) {
@@ -68,6 +95,9 @@ function renderHistoryTable(records) {
       </td>
       <td>${safePrize}</td>
       <td style="white-space:nowrap">${toDateTimeText(record.created_at)}</td>
+      <td>
+        <button type="button" class="history-btn admin-danger-btn history-row-delete" data-id="${record.id}">ลบรายการ</button>
+      </td>
     `;
     tbody.appendChild(row);
   });
@@ -173,7 +203,7 @@ function exportHistoryCsv() {
 
 async function loadHistory() {
   try {
-    const response = await fetch('/api/history');
+    const response = await authFetch('/api/history');
     const history = await response.json();
 
     if (!response.ok) {
@@ -209,7 +239,7 @@ async function saveStaffNote(recordId) {
   button.textContent = 'กำลังบันทึก...';
 
   try {
-    const response = await fetch(`/api/admin/history/${recordId}/admin-note`, {
+    const response = await authFetch(`/api/admin/history/${recordId}/admin-note`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminNote })
@@ -235,7 +265,7 @@ async function clearHistory() {
   confirmBtn.textContent = 'กำลังล้าง...';
 
   try {
-    const response = await fetch('/api/admin/history/clear', {
+    const response = await authFetch('/api/admin/history/clear', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -258,11 +288,65 @@ async function clearHistory() {
   }
 }
 
+async function deleteHistoryRow(recordId) {
+  const historyId = Number(recordId ?? pendingDeleteHistoryId);
+  if (!Number.isInteger(historyId) || historyId <= 0) {
+    setHistoryMessage('รหัสประวัติไม่ถูกต้อง', 'error');
+    closeDeleteHistoryModal();
+    return;
+  }
+
+  const button = pendingDeleteButton || document.querySelector(`.history-row-delete[data-id="${historyId}"]`);
+  const confirmDeleteBtn = document.getElementById('confirmDeleteHistoryBtn');
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'กำลังลบ...';
+  }
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.disabled = true;
+    confirmDeleteBtn.textContent = 'กำลังลบ...';
+  }
+
+  try {
+    const response = await authFetch(`/api/admin/history/${historyId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'ลบรายการไม่สำเร็จ');
+    }
+
+    closeDeleteHistoryModal();
+    await loadHistory();
+  } catch (error) {
+    setHistoryMessage(error.message || 'ลบรายการไม่สำเร็จ', 'error');
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.disabled = false;
+      confirmDeleteBtn.textContent = 'ยืนยันลบรายการนี้';
+    }
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'ลบรายการ';
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!window.Auth.requireAdminAuth()) {
+    return;
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => window.Auth.logout());
   document.getElementById('historyBody').addEventListener('click', event => {
     const target = event.target;
     if (target.classList.contains('staff-note-save')) {
       saveStaffNote(target.dataset.id);
+      return;
+    }
+    if (target.classList.contains('history-row-delete')) {
+      openDeleteHistoryModal(target.dataset.id, target);
     }
   });
 
@@ -271,9 +355,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('openClearHistoryModalBtn').addEventListener('click', openClearHistoryModal);
   document.getElementById('closeClearHistoryModalBtn').addEventListener('click', closeClearHistoryModal);
   document.getElementById('confirmClearHistoryBtn').addEventListener('click', clearHistory);
+  document.getElementById('closeDeleteHistoryModalBtn').addEventListener('click', closeDeleteHistoryModal);
+  document.getElementById('confirmDeleteHistoryBtn').addEventListener('click', () => deleteHistoryRow());
   document.getElementById('clearHistoryModal').addEventListener('click', event => {
     if (event.target.id === 'clearHistoryModal') {
       closeClearHistoryModal();
+    }
+  });
+  document.getElementById('deleteHistoryModal').addEventListener('click', event => {
+    if (event.target.id === 'deleteHistoryModal') {
+      closeDeleteHistoryModal();
     }
   });
 

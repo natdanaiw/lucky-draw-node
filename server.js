@@ -28,6 +28,9 @@ const db      = require('./db');
 
 const app  = express();
 const PORT = 3000;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@1234';
+const ADMIN_TOKEN = process.env.ADMIN_ACCESS_TOKEN || 'lucky-draw-admin-token';
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
@@ -45,8 +48,36 @@ function isValidPhone(phone) {
   return /^0\d{9}$/.test(normalizePhone(phone));
 }
 
+function getBearerToken(req) {
+  const authHeader = String(req.headers.authorization || '');
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return '';
+  }
+  return parts[1].trim();
+}
+
+function requireAdminAuth(req, res, next) {
+  const token = getBearerToken(req);
+  if (!token || token !== ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.post('/api/auth/login', (req, res) => {
+  const username = String(req.body?.username || '').trim();
+  const password = String(req.body?.password || '');
+
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+  }
+
+  res.json({ token: ADMIN_TOKEN });
+});
 
 // ─── API: ตรวจสอบเบอร์ซ้ำ ─────────────────────────────────────
 app.get('/api/check/:phone', async (req, res) => {
@@ -112,7 +143,7 @@ app.get('/api/stock', async (req, res) => {
 });
 
 // ─── API: เพิ่มของรางวัล / เติม stock ─────────────────────────
-app.post('/api/admin/prizes', async (req, res) => {
+app.post('/api/admin/prizes', requireAdminAuth, async (req, res) => {
   const { name, unit, quantity } = req.body || {};
 
   try {
@@ -124,7 +155,7 @@ app.post('/api/admin/prizes', async (req, res) => {
 });
 
 // ─── API: import ของรางวัลผ่าน CSV (แปลงเป็น JSON ฝั่ง client) ──
-app.post('/api/admin/prizes/import', async (req, res) => {
+app.post('/api/admin/prizes/import', requireAdminAuth, async (req, res) => {
   const items = Array.isArray(req.body?.items) ? req.body.items : [];
   if (items.length === 0) {
     return res.status(400).json({ error: 'ไม่พบข้อมูลสำหรับ import' });
@@ -145,7 +176,7 @@ app.post('/api/admin/prizes/import', async (req, res) => {
 });
 
 // ─── API: ปรับปรุงจำนวน stock ─────────────────────────────────
-app.patch('/api/admin/stock/:id', async (req, res) => {
+app.patch('/api/admin/stock/:id', requireAdminAuth, async (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body || {};
 
@@ -171,7 +202,7 @@ app.patch('/api/admin/stock/:id', async (req, res) => {
 });
 
 // ─── API: เคลียร์ stock ทั้งหมด ──────────────────────────────
-app.post('/api/admin/stock/clear', async (req, res) => {
+app.post('/api/admin/stock/clear', requireAdminAuth, async (req, res) => {
   try {
     const changedRows = await db.clearStock();
     res.json({
@@ -183,7 +214,7 @@ app.post('/api/admin/stock/clear', async (req, res) => {
 });
 
 // ─── API: ล้างประวัติผู้รับรางวัลทั้งหมด ───────────────────────
-app.post('/api/admin/history/clear', async (req, res) => {
+app.post('/api/admin/history/clear', requireAdminAuth, async (req, res) => {
   try {
     const changedRows = await db.clearHistory();
     res.json({
@@ -195,7 +226,7 @@ app.post('/api/admin/history/clear', async (req, res) => {
 });
 
 // ─── API: บันทึกโน้ตทีมงานหลังบ้าน ─────────────────────────
-app.patch('/api/admin/history/:id/admin-note', async (req, res) => {
+app.patch('/api/admin/history/:id/admin-note', requireAdminAuth, async (req, res) => {
   const { id } = req.params;
   const { adminNote } = req.body || {};
 
@@ -204,6 +235,20 @@ app.patch('/api/admin/history/:id/admin-note', async (req, res) => {
     res.json({ message: 'บันทึกหมายเหตุทีมงานเรียบร้อย', record });
   } catch (error) {
     const message = error.message || 'บันทึกหมายเหตุทีมงานไม่สำเร็จ';
+    const status = message.includes('ไม่พบรายการ') ? 404 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+// ─── API: ลบประวัติผู้รับรางวัลรายรายการ ───────────────────────
+app.delete('/api/admin/history/:id', requireAdminAuth, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.deleteHistoryById(id);
+    res.json({ message: 'ลบรายการประวัติเรียบร้อย', record: result });
+  } catch (error) {
+    const message = error.message || 'ลบรายการไม่สำเร็จ';
     const status = message.includes('ไม่พบรายการ') ? 404 : 400;
     res.status(status).json({ error: message });
   }
@@ -260,7 +305,7 @@ app.post('/api/draw', async (req, res) => {
 });
 
 // ─── API: ดูประวัติทั้งหมด ─────────────────────────────────────
-app.get('/api/history', async (req, res) => {
+app.get('/api/history', requireAdminAuth, async (req, res) => {
   try {
     res.json(await db.getHistory());
   } catch (error) {
@@ -269,7 +314,7 @@ app.get('/api/history', async (req, res) => {
 });
 
 // ─── API: Debug current database mode ──────────────────────────
-app.get('/api/admin/db-mode', (req, res) => {
+app.get('/api/admin/db-mode', requireAdminAuth, (req, res) => {
   res.json({
     mode: db.getDbMode(),
     d1Enabled: String(process.env.CF_D1_ENABLED || '').toLowerCase() === 'true',

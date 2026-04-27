@@ -49,6 +49,10 @@ function clearFieldError(fieldId) {
 
 function clearValidationErrors() {
   ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'note'].forEach(clearFieldError);
+  const consentWrap = document.getElementById('pdpaConsentWrap');
+  const consentError = document.getElementById('pdpaConsentError');
+  if (consentWrap) consentWrap.classList.remove('input-invalid');
+  if (consentError) consentError.textContent = '';
 }
 
 function getFormMessageNode() {
@@ -69,6 +73,13 @@ function setFormMessage(message, tone) {
   node.className = `form-inline-message${tone ? ` ${tone}` : ''}`;
 }
 
+function syncSubmitButtonState() {
+  const submitBtn = document.getElementById('submitBtn');
+  const pdpaConsent = document.getElementById('pdpaConsent');
+  if (!submitBtn || !pdpaConsent) return;
+  submitBtn.disabled = !pdpaConsent.checked;
+}
+
 // ─── Form Submit ──────────────────────────────────────────────
 async function submitForm() {
   clearValidationErrors();
@@ -83,6 +94,7 @@ async function submitForm() {
     position: document.getElementById('position').value.trim(),
     interest: document.getElementById('interest').value,
     note:     document.getElementById('note').value.trim(),
+    pdpaConsent: document.getElementById('pdpaConsent')?.checked === true,
   };
 
   const requiredLabels = {
@@ -114,6 +126,18 @@ async function submitForm() {
     setFieldError('email', 'รูปแบบอีเมลไม่ถูกต้อง เช่น name@example.com');
     document.getElementById('email').focus();
     setFormMessage('กรุณาตรวจสอบข้อมูลที่กรอก', 'error');
+    return;
+  }
+
+  if (!fields.pdpaConsent) {
+    const consentWrap = document.getElementById('pdpaConsentWrap');
+    const consentError = document.getElementById('pdpaConsentError');
+    if (consentWrap) consentWrap.classList.add('input-invalid');
+    if (consentError) {
+      consentError.textContent = 'กรุณายินยอมการประมวลผลข้อมูลส่วนบุคคลก่อนร่วมกิจกรรม';
+    }
+    document.getElementById('pdpaConsent')?.focus();
+    setFormMessage('กรุณายืนยัน PDPA ก่อนกดลุ้นรางวัล', 'error');
     return;
   }
 
@@ -269,6 +293,9 @@ function restart() {
   });
   document.getElementById('note').value = '';
   document.getElementById('interest').value = '';
+  const pdpaConsent = document.getElementById('pdpaConsent');
+  if (pdpaConsent) pdpaConsent.checked = false;
+  syncSubmitButtonState();
   const lid = document.getElementById('boxLid');
   lid.classList.remove('shake', 'open-lid');
   document.getElementById('sparkles').innerHTML = '';
@@ -288,8 +315,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('submitBtn').addEventListener('click', submitForm);
-  document.getElementById('restartBtn').addEventListener('click', restart);
-  document.getElementById('dupRestartBtn').addEventListener('click', restart);
+  syncSubmitButtonState();
+  const restartBtn = document.getElementById('restartBtn');
+  if (restartBtn) restartBtn.addEventListener('click', restart);
+  const dupRestartBtn = document.getElementById('dupRestartBtn');
+  if (dupRestartBtn) dupRestartBtn.addEventListener('click', restart);
+  const pdpaConsent = document.getElementById('pdpaConsent');
+  if (pdpaConsent) {
+    pdpaConsent.addEventListener('change', () => {
+      const consentWrap = document.getElementById('pdpaConsentWrap');
+      const consentError = document.getElementById('pdpaConsentError');
+      syncSubmitButtonState();
+      if (pdpaConsent.checked) {
+        if (consentWrap) consentWrap.classList.remove('input-invalid');
+        if (consentError) consentError.textContent = '';
+      }
+      setFormMessage('');
+    });
+  }
   document.getElementById('interest').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitForm();
   });

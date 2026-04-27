@@ -2,24 +2,30 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lucky Draw — ประวัติผู้รับรางวัล</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/auth.js"></script>
+  <script>
+    window.Auth.requireAdminAuth();
+  </script>
 </head>
 <body>
   <div class="history-page">
     <div class="history-page-card">
       <div class="history-page-header">
         <div class="history-page-title">
+          <img src="images/MSC%20Logo%20White.png" alt="MSC" class="msc-logo page-brand-logo" />
           <h1>📋 ประวัติผู้รับรางวัล</h1>
           <p>แสดงประวัติผู้รับรางวัล พร้อมหมายเหตุลูกค้าและบันทึกทีมงานหลังบ้าน</p>
         </div>
         <div class="history-page-actions">
           <a class="restart-btn history-page-link" href="/">← กลับหน้าลงทะเบียน</a>
           <a class="restart-btn history-page-link" href="admin.html">🛠️ ไปหน้า Admin Stock</a>
+          <button type="button" class="history-btn auth-logout-btn" id="logoutBtn" aria-label="ออกจากระบบ" title="ออกจากระบบ">↪</button>
         </div>
       </div>
 
@@ -42,11 +48,12 @@
               <th>บันทึกทีมงาน</th>
               <th>รางวัล</th>
               <th>วันเวลา</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="historyBody">
             <tr>
-              <td colspan="9" class="history-status">กำลังโหลด...</td>
+              <td colspan="10" class="history-status">กำลังโหลด...</td>
             </tr>
           </tbody>
         </table>
@@ -63,6 +70,19 @@
       <div class="modal-body">
         <p class="admin-import-hint">การทำรายการนี้จะลบประวัติผู้รับรางวัลทั้งหมดออกจากระบบทันที</p>
         <button type="button" class="history-btn admin-danger-btn" id="confirmClearHistoryBtn">ยืนยันล้างประวัติทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteHistoryModal" class="modal-backdrop">
+    <div class="modal-card admin-prize-modal">
+      <div class="modal-header">
+        <h3>ยืนยันการลบรายการ</h3>
+        <button class="modal-close" id="closeDeleteHistoryModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="admin-import-hint">การทำรายการนี้จะลบประวัติผู้รับรางวัลเฉพาะรายการที่เลือก และไม่สามารถกู้คืนได้</p>
+        <button type="button" class="history-btn admin-danger-btn" id="confirmDeleteHistoryBtn">ยืนยันลบรายการนี้</button>
       </div>
     </div>
   </div>

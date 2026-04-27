@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lucky Draw — Admin Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="screen active" id="login-screen">
+      <div class="form-card auth-card">
+        <div class="form-logo">
+          <img src="images/MSC%20Logo%20White.png" alt="MSC" class="msc-logo form-brand-logo" />
+          <span class="star-icon">🔐</span>
+          <h1>เข้าสู่ระบบผู้ดูแล</h1>
+          <p>สำหรับเข้าหน้า Admin และ History หลังบ้าน</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="username">ชื่อผู้ใช้</label>
+            <input type="text" id="username" autocomplete="username" placeholder="กรอกชื่อผู้ใช้" />
+          </div>
+
+          <div class="form-group">
+            <label for="password">รหัสผ่าน</label>
+            <input type="password" id="password" autocomplete="current-password" placeholder="กรอกรหัสผ่าน" />
+          </div>
+
+          <button type="submit" class="submit-btn" id="loginSubmitBtn">เข้าสู่ระบบ</button>
+        </form>
+
+        <div id="loginMessage" class="form-inline-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

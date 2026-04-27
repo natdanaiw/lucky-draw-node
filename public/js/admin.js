@@ -1,5 +1,9 @@
 let adminMessageTimer = null;
 
+function authFetch(url, options) {
+  return window.Auth.authFetch(url, options);
+}
+
 function setAdminMessage(message, tone) {
   const target = document.getElementById('adminMessage');
   if (!target) {
@@ -126,7 +130,7 @@ async function importCsv() {
     const items = parseCsvToItems(csvText);
     setAdminMessage('กำลังนำเข้าข้อมูล CSV...', '');
 
-    const response = await fetch('/api/admin/prizes/import', {
+    const response = await authFetch('/api/admin/prizes/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items })
@@ -149,7 +153,7 @@ async function loadStock() {
   const tbody = document.getElementById('stockBody');
 
   try {
-    const response = await fetch('/api/stock');
+    const response = await authFetch('/api/stock');
     const stock = await response.json();
     tbody.innerHTML = '';
 
@@ -206,7 +210,7 @@ async function submitPrizeForm(event) {
   setAdminMessage('กำลังบันทึกข้อมูล...', '');
 
   try {
-    const response = await fetch('/api/admin/prizes', {
+    const response = await authFetch('/api/admin/prizes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -232,7 +236,7 @@ async function clearStock() {
   confirmBtn.textContent = 'กำลังเคลียร์...';
 
   try {
-    const response = await fetch('/api/admin/stock/clear', {
+    const response = await authFetch('/api/admin/stock/clear', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -274,7 +278,7 @@ async function submitAdjustQuantityForm(event) {
   setAdminMessage('กำลังบันทึกการปรับจำนวน...', '');
 
   try {
-    const response = await fetch(`/api/admin/stock/${prizeId}`, {
+    const response = await authFetch(`/api/admin/stock/${prizeId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quantity: newQuantity })
@@ -294,6 +298,11 @@ async function submitAdjustQuantityForm(event) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!window.Auth.requireAdminAuth()) {
+    return;
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => window.Auth.logout());
   document.getElementById('openPrizeModalBtn').addEventListener('click', openPrizeModal);
   document.getElementById('closePrizeModalBtn').addEventListener('click', closePrizeModal);
   document.getElementById('openClearStockModalBtn').addEventListener('click', openClearStockModal);

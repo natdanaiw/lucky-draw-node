@@ -1,0 +1,13 @@
+name = "lucky-draw-api"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "luckydraw"
+database_id = "d47c4554-7e4c-4916-9810-81ffe5eb7033"
+

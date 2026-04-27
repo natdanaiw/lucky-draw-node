@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lucky Draw — ลุ้นรับของรางวัล</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MSC Lucky Draw — ลุ้นรับของรางวัล</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -16,8 +16,9 @@
     <div id="form-screen" class="screen active">
       <div class="form-card">
         <div class="form-logo">
+          <img src="images/MSC%20Logo%20White.png" alt="MSC" class="msc-logo form-brand-logo" />
           <span class="star-icon">🎁</span>
-          <h1>ลุ้นรับของรางวัล</h1>
+          <h1>Lucky Draw — ลุ้นรับของรางวัล</h1>
           <p>กรอกข้อมูลเพื่อรับสิทธิ์ลุ้นของรางวัลสุดพิเศษ</p>
         </div>
 
@@ -99,7 +100,19 @@
           <textarea id="note" rows="3" maxlength="500" placeholder="เช่น สนใจทำ POC, นัด technical meeting เพิ่มเติม, หรือให้ทีมติดต่อกลับ"></textarea>
         </div>
 
-        <button class="submit-btn" id="submitBtn">🎲 ลุ้นรับของรางวัล</button>
+        <div class="pdpa-consent" id="pdpaConsentWrap">
+          <label class="pdpa-consent-label" for="pdpaConsent">
+            <input type="checkbox" id="pdpaConsent" />
+            <span>
+              ข้าพเจ้ายินยอมให้ผู้จัดงานเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลที่กรอกไว้
+              เพื่อการจัดกิจกรรมลุ้นรางวัล การติดต่อกลับ และการนำเสนอข้อมูลที่เกี่ยวข้องตาม
+              นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)
+            </span>
+          </label>
+          <div class="field-error" id="pdpaConsentError"></div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled>🎲 ลุ้นรับของรางวัล</button>
       </div>
     </div>
 
@@ -139,8 +152,8 @@
         <div class="prize-qty" id="prizeQty"></div>
       </div>
 
-      <div class="stock-summary" id="stockSummary"></div>
-      <button class="restart-btn" id="restartBtn">← ลุ้นคนต่อไป</button>
+      <!-- <div class="stock-summary" id="stockSummary"></div>
+      <button class="restart-btn" id="restartBtn">← ลุ้นคนต่อไป</button> -->
     </div>
 
     <!-- ===== SCREEN 4: DUPLICATE WARNING ===== -->

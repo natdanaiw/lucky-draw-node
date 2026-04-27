@@ -376,6 +376,20 @@ async function updateAdminNoteUsing(adapter, id, adminNote) {
   return adapter.selectOne('SELECT * FROM history WHERE id = ? LIMIT 1', [historyId]);
 }
 
+async function deleteHistoryByIdUsing(adapter, id) {
+  const historyId = Number(id);
+  if (!Number.isInteger(historyId) || historyId <= 0) {
+    throw new Error('รหัสประวัติไม่ถูกต้อง');
+  }
+
+  const result = await adapter.run('DELETE FROM history WHERE id = ?', [historyId]);
+  if (result.changes === 0) {
+    throw new Error('ไม่พบรายการประวัติที่ต้องการลบ');
+  }
+
+  return { id: historyId, deleted: true };
+}
+
 async function updateStockUsing(adapter, id, newQuantity) {
   const stockId = Number(id);
   const qty = Number(newQuantity);
@@ -514,6 +528,13 @@ async function updateStock(id, newQuantity) {
   );
 }
 
+async function deleteHistoryById(id) {
+  return withFallback(
+    adapter => deleteHistoryByIdUsing(adapter, id),
+    adapter => deleteHistoryByIdUsing(adapter, id)
+  );
+}
+
 async function clearStock() {
   return withFallback(
     adapter => clearTableUsing(adapter, 'stock'),
@@ -539,6 +560,7 @@ module.exports = {
   saveHistory,
   getHistory,
   updateAdminNote,
+  deleteHistoryById,
   updateStock,
   clearStock,
   clearHistory

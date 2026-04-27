@@ -5,6 +5,23 @@ function json(data, status = 200) {
   });
 }
 
+function getAdminConfig(env) {
+  return {
+    username: String(env.ADMIN_USERNAME || 'admin'),
+    password: String(env.ADMIN_PASSWORD || 'Admin@1234'),
+    token: String(env.ADMIN_ACCESS_TOKEN || 'lucky-draw-admin-token')
+  };
+}
+
+function getBearerToken(request) {
+  const authHeader = String(request.headers.get('Authorization') || '');
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return '';
+  }
+  return parts[1].trim();
+}
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
 }
@@ -172,8 +189,29 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method.toUpperCase();
+    const adminConfig = getAdminConfig(env);
 
     try {
+      if (path === '/api/auth/login' && method === 'POST') {
+        const body = await parseBody(request);
+        const username = String(body?.username || '').trim();
+        const password = String(body?.password || '');
+
+        if (username !== adminConfig.username || password !== adminConfig.password) {
+          return json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' }, 401);
+        }
+
+        return json({ token: adminConfig.token });
+      }
+
+      const needsAdminAuth = path === '/api/history' || path.startsWith('/api/admin/');
+      if (needsAdminAuth) {
+        const token = getBearerToken(request);
+        if (!token || token !== adminConfig.token) {
+          return json({ error: 'Unauthorized' }, 401);
+        }
+      }
+
       const checkPhoneMatch = path.match(/^\/api\/check\/(.+)$/);
       if (method === 'GET' && checkPhoneMatch) {
         const phone = normalizePhone(decodeURIComponent(checkPhoneMatch[1] || ''));
@@ -284,6 +322,25 @@ export default {
         return json({ message: 'บันทึกหมายเหตุทีมงานเรียบร้อย', record });
       }
 
+      const historyDeleteMatch = path.match(/^\/api\/admin\/history\/(\d+)$/);
+      if (historyDeleteMatch && method === 'DELETE') {
+        const historyId = Number(historyDeleteMatch[1]);
+
+        if (!Number.isInteger(historyId) || historyId <= 0) {
+          return json({ error: 'รหัสประวัติไม่ถูกต้อง' }, 400);
+        }
+
+        const result = await run(DB, 'DELETE FROM history WHERE id = ?', [historyId]);
+        if (Number(result?.changes || 0) === 0) {
+          return json({ error: 'ไม่พบรายการประวัติที่ต้องการลบ' }, 404);
+        }
+
+        return json({
+          message: 'ลบรายการประวัติเรียบร้อย',
+          record: { id: historyId, deleted: true }
+        });
+      }
+
       if (path === '/api/draw' && method === 'POST') {
         const fields = await parseBody(request);
         const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
@@ -349,6 +406,10 @@ export default {
         });
       }
 
+      // Serve static files from ./public for non-API routes
+      if (env.ASSETS) {
+        return env.ASSETS.fetch(request);
+      }
       return json({ error: 'Not Found' }, 404);
     } catch (error) {
       return json({ error: error.message || 'Internal Server Error' }, 500);

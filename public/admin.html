@@ -2,12 +2,16 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lucky Draw — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/auth.js"></script>
+  <script>
+    window.Auth.requireAdminAuth();
+  </script>
 </head>
 <body>
   <div id="adminMessage" class="admin-toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -15,12 +19,14 @@
     <div class="history-page-card">
       <div class="history-page-header">
         <div class="history-page-title">
+          <img src="images/MSC%20Logo%20White.png" alt="MSC" class="msc-logo page-brand-logo" />
           <h1>🛠️ Admin Dashboard</h1>
           <p>ดูประวัติการแจกของรางวัล จัดการ stock และเพิ่มของรางวัลใหม่ผ่านฐานข้อมูล SQLite</p>
         </div>
         <div class="history-page-actions">
           <a class="restart-btn history-page-link" href="/">← กลับหน้าลงทะเบียน</a>
           <a class="restart-btn history-page-link" href="history.html">📋 ดูหน้า History</a>
+          <button type="button" class="history-btn auth-logout-btn" id="logoutBtn" aria-label="ออกจากระบบ" title="ออกจากระบบ">↪</button>
         </div>
       </div>
 

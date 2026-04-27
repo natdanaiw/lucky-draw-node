@@ -5,8 +5,12 @@
   padding: 0;
 }
 
-html, body {
+html {
   height: 100%;
+  /* prevent content from hiding under status bar on mobile */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 body {
@@ -15,9 +19,10 @@ body {
   background-attachment: fixed;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 3rem;
+  padding-bottom: calc(3rem + env(safe-area-inset-bottom));
 }
 
 /* ===== SCREEN SYSTEM ===== */
@@ -48,6 +53,17 @@ body {
 .form-logo {
   text-align: center;
   margin-bottom: 2rem;
+}
+
+.msc-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.form-brand-logo {
+  max-width: 220px;
+  margin: 0 auto 0.85rem;
 }
 
 .form-logo .star-icon {
@@ -110,14 +126,15 @@ body {
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   color: #fff;
   font-family: 'Prompt', sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem; /* min 16px — prevents iOS auto-zoom */
   outline: none;
   transition: border-color 0.2s, background 0.2s;
   appearance: none;
   -webkit-appearance: none;
+  min-height: 48px; /* touch-friendly */
 }
 
 .form-group input::placeholder {
@@ -172,6 +189,41 @@ body {
   color: #86efac;
 }
 
+.pdpa-consent {
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pdpa-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.pdpa-consent-label input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  flex: 0 0 18px;
+  accent-color: #63b3ed;
+}
+
+.pdpa-consent-label span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.pdpa-consent.input-invalid {
+  border-color: rgba(248, 113, 113, 0.9);
+  background: rgba(248, 113, 113, 0.08);
+}
+
 .form-group select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -189,16 +241,19 @@ body {
   width: 100%;
   margin-top: 0.5rem;
   padding: 1rem;
+  min-height: 52px;
   background: linear-gradient(135deg, #63b3ed 0%, #4299e1 100%);
   border: none;
   border-radius: 12px;
   color: #fff;
   font-family: 'Prompt', sans-serif;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   box-shadow: 0 4px 20px rgba(99, 179, 237, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .submit-btn:hover {
@@ -208,6 +263,15 @@ body {
 
 .submit-btn:active {
   transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  background: linear-gradient(135deg, #5f6d82 0%, #4b586e 100%);
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.9;
 }
 
 /* ===== LOADING SCREEN ===== */
@@ -517,12 +581,111 @@ body {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 480px) {
   .form-card {
-    padding: 1.75rem 1.25rem;
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+  }
+
+  .form-logo h1 {
+    font-size: 1.35rem;
+  }
+
+  .form-brand-logo {
+    max-width: 180px;
+    margin-bottom: 0.7rem;
+  }
+
+  .form-logo p {
+    font-size: 0.8rem;
   }
 
   .form-row {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 1rem; /* keep 16px to prevent iOS zoom */
+    padding: 0.7rem 0.875rem;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+    padding: 0.9rem;
+  }
+
+  .pdpa-consent {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .pdpa-consent-label span {
+    font-size: 0.78rem;
+  }
+
+  /* Loading screen */
+  .box-container {
+    width: 170px;
+    height: 170px;
+  }
+
+  .box-body {
+    height: 120px;
+  }
+
+  .box-lid {
+    height: 48px;
+  }
+
+  /* Result screen */
+  .prize-name {
+    font-size: 1.6rem;
+  }
+
+  .prize-icon-big {
+    font-size: 2.8rem;
+  }
+
+  .trophy {
+    font-size: 3rem;
+  }
+
+  .customer-name {
+    font-size: 1.1rem;
+  }
+
+  .prize-reveal {
+    padding: 1.5rem 1rem;
+    margin: 1rem 0;
+  }
+
+  /* Duplicate screen */
+  .dup-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .dup-title {
+    font-size: 1.2rem;
+  }
+
+  .dup-value {
+    font-size: 0.85rem;
+  }
+
+  /* Buttons */
+  .restart-btn {
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .history-btn {
+    min-height: 48px;
+    font-size: 0.9rem;
   }
 }
 
@@ -855,6 +1018,11 @@ body {
   margin-top: 0.25rem;
 }
 
+.page-brand-logo {
+  max-width: 200px;
+  margin-bottom: 0.6rem;
+}
+
 .history-page-actions {
   display: flex;
   align-items: center;
@@ -1152,6 +1320,49 @@ body {
   cursor: not-allowed;
 }
 
+.history-row-delete {
+  width: auto;
+  margin-top: 0;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.history-row-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-card {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.auth-form {
+  margin-top: 0.25rem;
+}
+
+.auth-logout-btn {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.auth-logout-btn:hover {
+  color: #fff;
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(185, 28, 28, 0.28);
+}
+
 @media (max-width: 960px) {
   .admin-grid {
     grid-template-columns: 1fr;
@@ -1187,12 +1398,21 @@ body {
     align-items: stretch;
   }
 
+  .page-brand-logo {
+    max-width: 170px;
+  }
+
   .history-page-actions {
     width: 100%;
   }
 
   .history-page-link {
     width: 100%;
+  }
+
+  .auth-logout-btn {
+    width: 44px;
+    align-self: flex-end;
   }
 
   .history-tools {
