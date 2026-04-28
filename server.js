@@ -36,6 +36,40 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
 }
 
+const PUBLIC_EMAIL_DOMAINS = new Set([
+  'gmail.com',
+  'googlemail.com',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'msn.com',
+  'yahoo.com',
+  'yahoo.co.th',
+  'ymail.com',
+  'rocketmail.com',
+  'icloud.com',
+  'me.com',
+  'mac.com',
+  'aol.com',
+  'proton.me',
+  'protonmail.com',
+  'gmx.com',
+  'mail.com',
+  'zoho.com'
+]);
+
+function getEmailDomain(email) {
+  const value = String(email || '').trim().toLowerCase();
+  const atIndex = value.lastIndexOf('@');
+  if (atIndex < 0) return '';
+  return value.slice(atIndex + 1);
+}
+
+function isPublicEmailDomain(email) {
+  const domain = getEmailDomain(email);
+  return PUBLIC_EMAIL_DOMAINS.has(domain);
+}
+
 function normalizePhone(phone) {
   return String(phone || '').replace(/[-\s]/g, '');
 }
@@ -266,6 +300,10 @@ app.post('/api/draw', async (req, res) => {
 
   if (!isValidEmail(fields.email)) {
     return res.status(400).json({ error: 'รูปแบบอีเมลไม่ถูกต้อง' });
+  }
+
+  if (isPublicEmailDomain(fields.email)) {
+    return res.status(400).json({ error: 'ไม่อนุญาตให้อีเมลสาธารณะ กรุณาใช้อีเมลองค์กร' });
   }
 
   if (!isValidPhone(fields.phone)) {

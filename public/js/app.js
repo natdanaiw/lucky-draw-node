@@ -13,6 +13,40 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const PUBLIC_EMAIL_DOMAINS = new Set([
+  'gmail.com',
+  'googlemail.com',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'msn.com',
+  'yahoo.com',
+  'yahoo.co.th',
+  'ymail.com',
+  'rocketmail.com',
+  'icloud.com',
+  'me.com',
+  'mac.com',
+  'aol.com',
+  'proton.me',
+  'protonmail.com',
+  'gmx.com',
+  'mail.com',
+  'zoho.com'
+]);
+
+function getEmailDomain(email) {
+  const value = String(email || '').trim().toLowerCase();
+  const atIndex = value.lastIndexOf('@');
+  if (atIndex < 0) return '';
+  return value.slice(atIndex + 1);
+}
+
+function isPublicEmailDomain(email) {
+  const domain = getEmailDomain(email);
+  return PUBLIC_EMAIL_DOMAINS.has(domain);
+}
+
 function normalizePhone(phone) {
   return phone.replace(/[-\s]/g, '');
 }
@@ -126,6 +160,13 @@ async function submitForm() {
     setFieldError('email', 'รูปแบบอีเมลไม่ถูกต้อง เช่น name@example.com');
     document.getElementById('email').focus();
     setFormMessage('กรุณาตรวจสอบข้อมูลที่กรอก', 'error');
+    return;
+  }
+
+  if (isPublicEmailDomain(fields.email)) {
+    setFieldError('email', 'ไม่อนุญาตให้ใช้อีเมลสาธารณะ เช่น gmail.com หรือ hotmail.com');
+    document.getElementById('email').focus();
+    setFormMessage('กรุณาใช้อีเมลองค์กร', 'error');
     return;
   }
 
