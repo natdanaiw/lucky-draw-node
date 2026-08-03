@@ -42,6 +42,7 @@
               <th>#</th>
               <th>ชื่อ-นามสกุล</th>
               <th>เบอร์โทร</th>
+              <th>Email</th>
               <th>บริษัท</th>
               <th>ตำแหน่ง</th>
               <th>หมายเหตุลูกค้า</th>
@@ -53,10 +54,20 @@
           </thead>
           <tbody id="historyBody">
             <tr>
-              <td colspan="10" class="history-status">กำลังโหลด...</td>
+              <td colspan="11" class="history-status">กำลังโหลด...</td>
             </tr>
           </tbody>
         </table>
+
+        <div id="historyPagination" class="history-pagination" hidden>
+          <div id="historyPaginationInfo" class="history-pagination-info"></div>
+          <div class="history-pagination-actions">
+            <button type="button" id="historyPageFirstBtn" class="history-btn history-pagination-btn">หน้าแรก</button>
+            <button type="button" id="historyPagePrevBtn" class="history-btn history-pagination-btn">ก่อนหน้า</button>
+            <button type="button" id="historyPageNextBtn" class="history-btn history-pagination-btn">ถัดไป</button>
+            <button type="button" id="historyPageLastBtn" class="history-btn history-pagination-btn">หน้าสุดท้าย</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

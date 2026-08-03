@@ -1,6 +1,8 @@
 let allHistoryRecords = [];
 let filteredHistoryRecords = [];
-const HISTORY_COLSPAN = 10;
+const HISTORY_COLSPAN = 11;
+const HISTORY_PAGE_SIZE = 10;
+let currentHistoryPage = 1;
 let pendingDeleteHistoryId = null;
 let pendingDeleteButton = null;
 
@@ -48,6 +50,7 @@ function escapeHtml(value) {
 function setHistoryMessage(message, tone) {
   const tbody = document.getElementById('historyBody');
   tbody.innerHTML = `<tr><td colspan="${HISTORY_COLSPAN}" class="history-status${tone ? ` ${tone}` : ''}">${message}</td></tr>`;
+  updateHistoryPagination(0, 1);
 }
 
 function toDateTimeText(dateValue) {
@@ -62,6 +65,51 @@ function toDateTimeText(dateValue) {
   });
 }
 
+function getHistoryTotalPages(totalRecords) {
+  return Math.max(1, Math.ceil(totalRecords / HISTORY_PAGE_SIZE));
+}
+
+function updateHistoryPagination(totalRecords, totalPages) {
+  const container = document.getElementById('historyPagination');
+  const info = document.getElementById('historyPaginationInfo');
+  const firstBtn = document.getElementById('historyPageFirstBtn');
+  const prevBtn = document.getElementById('historyPagePrevBtn');
+  const nextBtn = document.getElementById('historyPageNextBtn');
+  const lastBtn = document.getElementById('historyPageLastBtn');
+
+  if (!container || !info || !firstBtn || !prevBtn || !nextBtn || !lastBtn) {
+    return;
+  }
+
+  const hasRecords = totalRecords > 0;
+  container.hidden = !hasRecords;
+
+  if (!hasRecords) {
+    info.textContent = '';
+    firstBtn.disabled = true;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    lastBtn.disabled = true;
+    return;
+  }
+
+  info.textContent = `หน้า ${currentHistoryPage} / ${totalPages} (ทั้งหมด ${totalRecords} รายชื่อ)`;
+  firstBtn.disabled = currentHistoryPage <= 1;
+  prevBtn.disabled = currentHistoryPage <= 1;
+  nextBtn.disabled = currentHistoryPage >= totalPages;
+  lastBtn.disabled = currentHistoryPage >= totalPages;
+}
+
+function goToHistoryPage(pageNumber) {
+  if (filteredHistoryRecords.length === 0) {
+    return;
+  }
+
+  const totalPages = getHistoryTotalPages(filteredHistoryRecords.length);
+  currentHistoryPage = Math.min(totalPages, Math.max(1, pageNumber));
+  renderHistoryTable(filteredHistoryRecords);
+}
+
 function renderHistoryTable(records) {
   const tbody = document.getElementById('historyBody');
   tbody.innerHTML = '';
@@ -71,19 +119,33 @@ function renderHistoryTable(records) {
     return;
   }
 
-  records.forEach((record, index) => {
+  const totalPages = getHistoryTotalPages(records.length);
+  if (currentHistoryPage > totalPages) {
+    currentHistoryPage = totalPages;
+  }
+  if (currentHistoryPage < 1) {
+    currentHistoryPage = 1;
+  }
+
+  const startIndex = (currentHistoryPage - 1) * HISTORY_PAGE_SIZE;
+  const pageRecords = records.slice(startIndex, startIndex + HISTORY_PAGE_SIZE);
+
+  pageRecords.forEach((record, index) => {
     const row = document.createElement('tr');
     const safeName = escapeHtml(`${record.fname} ${record.lname}`);
     const safePhone = escapeHtml(record.phone);
+    const safeEmail = escapeHtml(record.email || '-');
     const safeCompany = escapeHtml(record.company);
     const safePosition = escapeHtml(record.position);
     const safeNote = escapeHtml(record.note || '-');
     const safeAdminNote = escapeHtml(record.admin_note || '');
     const safePrize = escapeHtml(`${record.icon} ${record.prize}`);
+    const displayNumber = records.length - (startIndex + index);
     row.innerHTML = `
-      <td style="opacity:.4">${records.length - index}</td>
+      <td style="opacity:.4">${displayNumber}</td>
       <td>${safeName}</td>
       <td>${safePhone}</td>
+      <td>${safeEmail}</td>
       <td>${safeCompany}</td>
       <td>${safePosition}</td>
       <td class="lead-note-cell">${safeNote}</td>
@@ -101,6 +163,8 @@ function renderHistoryTable(records) {
     `;
     tbody.appendChild(row);
   });
+
+  updateHistoryPagination(records.length, totalPages);
 }
 
 function applySearchFilter() {
@@ -108,6 +172,7 @@ function applySearchFilter() {
 
   if (!keyword) {
     filteredHistoryRecords = [...allHistoryRecords];
+    currentHistoryPage = 1;
     renderHistoryTable(filteredHistoryRecords);
     return;
   }
@@ -117,6 +182,7 @@ function applySearchFilter() {
       record.fname,
       record.lname,
       record.phone,
+      record.email,
       record.company,
       record.position,
       record.note,
@@ -130,6 +196,7 @@ function applySearchFilter() {
     return text.includes(keyword);
   });
 
+  currentHistoryPage = 1;
   renderHistoryTable(filteredHistoryRecords);
 }
 
@@ -279,6 +346,7 @@ async function clearHistory() {
     document.getElementById('historySearchInput').value = '';
     allHistoryRecords = [];
     filteredHistoryRecords = [];
+    currentHistoryPage = 1;
     setHistoryMessage(data.message || 'ลบประวัติผู้รับรางวัลเรียบร้อย', 'success');
   } catch (error) {
     setHistoryMessage(error.message || 'ล้างประวัติไม่สำเร็จ', 'error');
@@ -352,6 +420,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('historySearchInput').addEventListener('input', applySearchFilter);
   document.getElementById('exportHistoryCsvBtn').addEventListener('click', exportHistoryCsv);
+  document.getElementById('historyPageFirstBtn').addEventListener('click', () => goToHistoryPage(1));
+  document.getElementById('historyPagePrevBtn').addEventListener('click', () => goToHistoryPage(currentHistoryPage - 1));
+  document.getElementById('historyPageNextBtn').addEventListener('click', () => goToHistoryPage(currentHistoryPage + 1));
+  document.getElementById('historyPageLastBtn').addEventListener('click', () => goToHistoryPage(getHistoryTotalPages(filteredHistoryRecords.length)));
   document.getElementById('openClearHistoryModalBtn').addEventListener('click', openClearHistoryModal);
   document.getElementById('closeClearHistoryModalBtn').addEventListener('click', closeClearHistoryModal);
   document.getElementById('confirmClearHistoryBtn').addEventListener('click', clearHistory);
