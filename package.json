@@ -9,6 +9,7 @@
     "worker:dev": "npx wrangler dev",
     "worker:deploy": "npx wrangler deploy",
     "d1:migrate": "npx wrangler d1 execute luckydraw --remote --file=./migrations/d1/001_init.sql",
+    "d1:migrate:solution-interest": "npx wrangler d1 execute luckydraw --remote --file=./migrations/d1/002_add_solution_interest.sql",
     "d1:migrate:local": "npx wrangler d1 execute luckydraw --local --file=./migrations/d1/001_init.sql"
   },
   "dependencies": {

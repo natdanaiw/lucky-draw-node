@@ -293,7 +293,7 @@ app.post('/api/draw', async (req, res) => {
   const fields = req.body;
 
   // validate required fields
-  const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
+  const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solutionInterest'];
   if (required.some(k => !fields[k])) {
     return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบ' });
   }
@@ -334,7 +334,8 @@ app.post('/api/draw', async (req, res) => {
     }
 
     // บันทึกประวัติ
-    await db.saveHistory({ ...fields, phone, email, note, prize: prize.name, unit: prize.unit, icon: prize.icon });
+    const solutionInterest = String(fields.solutionInterest || '').trim();
+    await db.saveHistory({ ...fields, phone, email, note, solutionInterest, prize: prize.name, unit: prize.unit, icon: prize.icon });
 
     res.json({ prize });
   } catch (error) {

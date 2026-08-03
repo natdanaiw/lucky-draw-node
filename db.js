@@ -37,6 +37,7 @@ const CREATE_HISTORY_TABLE_SQL = `
     company TEXT NOT NULL,
     position TEXT NOT NULL,
     interest TEXT NOT NULL,
+    solution_interest TEXT NOT NULL DEFAULT '',
     note TEXT NOT NULL DEFAULT '',
     admin_note TEXT NOT NULL DEFAULT '',
     prize TEXT NOT NULL,
@@ -220,6 +221,11 @@ async function ensureHistoryColumns(adapter) {
   const hasAdminNote = columns.some(col => col.name === 'admin_note');
   if (!hasAdminNote) {
     await adapter.exec("ALTER TABLE history ADD COLUMN admin_note TEXT NOT NULL DEFAULT ''");
+  }
+
+  const hasSolutionInterest = columns.some(col => col.name === 'solution_interest');
+  if (!hasSolutionInterest) {
+    await adapter.exec("ALTER TABLE history ADD COLUMN solution_interest TEXT NOT NULL DEFAULT ''");
   }
 }
 
@@ -473,7 +479,7 @@ async function findByEmail(email) {
 async function saveHistory(data) {
   return withFallback(
     adapter => adapter.run(
-      'INSERT INTO history (fname, lname, phone, email, company, position, interest, note, prize, unit, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO history (fname, lname, phone, email, company, position, interest, solution_interest, note, prize, unit, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         data.fname,
         data.lname,
@@ -482,6 +488,7 @@ async function saveHistory(data) {
         data.company,
         data.position,
         data.interest,
+        String(data.solutionInterest || data.solution_interest || '').trim(),
         data.note || '',
         data.prize,
         data.unit,
@@ -489,7 +496,7 @@ async function saveHistory(data) {
       ]
     ),
     adapter => adapter.run(
-      'INSERT INTO history (fname, lname, phone, email, company, position, interest, note, prize, unit, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO history (fname, lname, phone, email, company, position, interest, solution_interest, note, prize, unit, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         data.fname,
         data.lname,
@@ -498,6 +505,7 @@ async function saveHistory(data) {
         data.company,
         data.position,
         data.interest,
+        String(data.solutionInterest || data.solution_interest || '').trim(),
         data.note || '',
         data.prize,
         data.unit,

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS history (
   company TEXT NOT NULL,
   position TEXT NOT NULL,
   interest TEXT NOT NULL,
+  solution_interest TEXT NOT NULL DEFAULT '',
   note TEXT NOT NULL DEFAULT '',
   admin_note TEXT NOT NULL DEFAULT '',
   prize TEXT NOT NULL,

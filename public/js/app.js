@@ -82,7 +82,7 @@ function clearFieldError(fieldId) {
 }
 
 function clearValidationErrors() {
-  ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'note'].forEach(clearFieldError);
+  ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solutionInterest', 'note'].forEach(clearFieldError);
   const consentWrap = document.getElementById('pdpaConsentWrap');
   const consentError = document.getElementById('pdpaConsentError');
   if (consentWrap) consentWrap.classList.remove('input-invalid');
@@ -127,6 +127,7 @@ async function submitForm() {
     company:  document.getElementById('company').value.trim(),
     position: document.getElementById('position').value.trim(),
     interest: document.getElementById('interest').value,
+    solutionInterest: document.getElementById('solutionInterest').value.trim(),
     note:     document.getElementById('note').value.trim(),
     pdpaConsent: document.getElementById('pdpaConsent')?.checked === true,
   };
@@ -138,7 +139,8 @@ async function submitForm() {
     email: 'กรุณากรอกอีเมล',
     company: 'กรุณากรอกชื่อบริษัท / องค์กร',
     position: 'กรุณาเลือกตำแหน่งงาน',
-    interest: 'กรุณาเลือกความสนใจ'
+    interest: 'กรุณาเลือกความสนใจ',
+    solutionInterest: 'กรุณาเลือก Solution ที่สนใจ'
   };
 
   const missingFields = Object.keys(requiredLabels).filter(key => !fields[key]);
@@ -334,6 +336,7 @@ function restart() {
   });
   document.getElementById('note').value = '';
   document.getElementById('interest').value = '';
+  document.getElementById('solutionInterest').value = '';
   const pdpaConsent = document.getElementById('pdpaConsent');
   if (pdpaConsent) pdpaConsent.checked = false;
   syncSubmitButtonState();
@@ -347,8 +350,8 @@ function restart() {
 
 // ─── Event Listeners ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'note'].forEach(id => {
-    const eventName = id === 'interest' || id === 'position' ? 'change' : 'input';
+  ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solutionInterest', 'note'].forEach(id => {
+    const eventName = id === 'interest' || id === 'position' || id === 'solutionInterest' ? 'change' : 'input';
     document.getElementById(id).addEventListener(eventName, () => {
       clearFieldError(id);
       setFormMessage('');

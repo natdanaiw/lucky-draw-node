@@ -1,6 +1,6 @@
 let allHistoryRecords = [];
 let filteredHistoryRecords = [];
-const HISTORY_COLSPAN = 11;
+const HISTORY_COLSPAN = 12;
 const HISTORY_PAGE_SIZE = 10;
 let currentHistoryPage = 1;
 let pendingDeleteHistoryId = null;
@@ -27,13 +27,21 @@ function openDeleteHistoryModal(recordId, buttonRef) {
 
   pendingDeleteHistoryId = historyId;
   pendingDeleteButton = buttonRef || null;
-  document.getElementById('confirmDeleteHistoryBtn').textContent = 'ยืนยันลบรายการนี้';
-  document.getElementById('confirmDeleteHistoryBtn').disabled = false;
+  const confirmDeleteBtn = document.getElementById('confirmDeleteHistoryBtn');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.dataset.historyId = String(historyId);
+    confirmDeleteBtn.textContent = 'ยืนยันลบรายการนี้';
+    confirmDeleteBtn.disabled = false;
+  }
   document.getElementById('deleteHistoryModal').classList.add('open');
 }
 
 function closeDeleteHistoryModal() {
   document.getElementById('deleteHistoryModal').classList.remove('open');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteHistoryBtn');
+  if (confirmDeleteBtn) {
+    delete confirmDeleteBtn.dataset.historyId;
+  }
   pendingDeleteHistoryId = null;
   pendingDeleteButton = null;
 }
@@ -137,6 +145,7 @@ function renderHistoryTable(records) {
     const safeEmail = escapeHtml(record.email || '-');
     const safeCompany = escapeHtml(record.company);
     const safePosition = escapeHtml(record.position);
+    const safeSolution = escapeHtml(record.solution_interest || '-');
     const safeNote = escapeHtml(record.note || '-');
     const safeAdminNote = escapeHtml(record.admin_note || '');
     const safePrize = escapeHtml(`${record.icon} ${record.prize}`);
@@ -148,6 +157,7 @@ function renderHistoryTable(records) {
       <td>${safeEmail}</td>
       <td>${safeCompany}</td>
       <td>${safePosition}</td>
+      <td>${safeSolution}</td>
       <td class="lead-note-cell">${safeNote}</td>
       <td>
         <div class="staff-note-editor">
@@ -185,6 +195,7 @@ function applySearchFilter() {
       record.email,
       record.company,
       record.position,
+      record.solution_interest,
       record.note,
       record.admin_note,
       record.prize,
@@ -220,6 +231,7 @@ function exportHistoryCsv() {
     'บริษัท',
     'ตำแหน่ง',
     'ความสนใจ',
+    'Solution ที่สนใจ',
     'หมายเหตุลูกค้า',
     'บันทึกทีมงาน',
     'รางวัล',
@@ -236,6 +248,7 @@ function exportHistoryCsv() {
     record.company,
     record.position,
     record.interest,
+    record.solution_interest || '',
     record.note || '',
     record.admin_note || '',
     record.prize,
@@ -357,7 +370,8 @@ async function clearHistory() {
 }
 
 async function deleteHistoryRow(recordId) {
-  const historyId = Number(recordId ?? pendingDeleteHistoryId);
+  const explicitId = recordId ?? document.getElementById('confirmDeleteHistoryBtn')?.dataset.historyId;
+  const historyId = Number(explicitId ?? pendingDeleteHistoryId);
   if (!Number.isInteger(historyId) || historyId <= 0) {
     setHistoryMessage('รหัสประวัติไม่ถูกต้อง', 'error');
     closeDeleteHistoryModal();
@@ -428,7 +442,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('closeClearHistoryModalBtn').addEventListener('click', closeClearHistoryModal);
   document.getElementById('confirmClearHistoryBtn').addEventListener('click', clearHistory);
   document.getElementById('closeDeleteHistoryModalBtn').addEventListener('click', closeDeleteHistoryModal);
-  document.getElementById('confirmDeleteHistoryBtn').addEventListener('click', () => deleteHistoryRow());
+  document.getElementById('confirmDeleteHistoryBtn').addEventListener('click', () => {
+    const confirmDeleteBtn = document.getElementById('confirmDeleteHistoryBtn');
+    deleteHistoryRow(confirmDeleteBtn?.dataset.historyId);
+  });
   document.getElementById('clearHistoryModal').addEventListener('click', event => {
     if (event.target.id === 'clearHistoryModal') {
       closeClearHistoryModal();

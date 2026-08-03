@@ -194,9 +194,9 @@ async function saveHistory(DB, data) {
   await run(
     DB,
     `INSERT INTO history
-      (fname, lname, phone, email, company, position, interest, note, prize, unit, icon)
+      (fname, lname, phone, email, company, position, interest, solution_interest, note, prize, unit, icon)
      VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.fname,
       data.lname,
@@ -205,6 +205,7 @@ async function saveHistory(DB, data) {
       data.company,
       data.position,
       data.interest,
+      String(data.solutionInterest || data.solution_interest || '').trim(),
       data.note || '',
       data.prize,
       data.unit,
@@ -377,7 +378,7 @@ export default {
 
       if (path === '/api/draw' && method === 'POST') {
         const fields = await parseBody(request);
-        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
+        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solutionInterest'];
         if (required.some(key => !fields[key])) {
           return json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, 400);
         }
