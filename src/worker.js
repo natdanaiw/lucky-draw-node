@@ -205,7 +205,7 @@ async function saveHistory(DB, data) {
       data.company,
       data.position,
       data.interest,
-      String(data.solutionInterest || data.solution_interest || '').trim(),
+      String(data.solution_interest || '').trim(),
       data.note || '',
       data.prize,
       data.unit,
@@ -378,7 +378,7 @@ export default {
 
       if (path === '/api/draw' && method === 'POST') {
         const fields = await parseBody(request);
-        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solutionInterest'];
+        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
         if (required.some(key => !fields[key])) {
           return json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, 400);
         }
