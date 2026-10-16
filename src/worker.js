@@ -378,9 +378,13 @@ export default {
 
       if (path === '/api/draw' && method === 'POST') {
         const fields = await parseBody(request);
-        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
+        const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solution_interest'];
         if (required.some(key => !fields[key])) {
           return json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, 400);
+        }
+
+        if (!['Cloud solution', 'AI', 'Enterprise Infrastructure'].includes(fields.solution_interest)) {
+          return json({ error: 'กรุณาเลือก IT solution ที่สนใจจากตัวเลือกที่กำหนด' }, 400);
         }
 
         if (!isValidEmail(fields.email)) {

@@ -1,6 +1,6 @@
 let allHistoryRecords = [];
 let filteredHistoryRecords = [];
-const HISTORY_COLSPAN = 11;
+const HISTORY_COLSPAN = 12;
 const HISTORY_PAGE_SIZE = 10;
 let currentHistoryPage = 1;
 let pendingDeleteHistoryId = null;
@@ -145,6 +145,7 @@ function renderHistoryTable(records) {
     const safeEmail = escapeHtml(record.email || '-');
     const safeCompany = escapeHtml(record.company);
     const safePosition = escapeHtml(record.position);
+    const safeSolutionInterest = escapeHtml(record.solution_interest || '-');
     const safeNote = escapeHtml(record.note || '-');
     const safeAdminNote = escapeHtml(record.admin_note || '');
     const safePrize = escapeHtml(`${record.icon} ${record.prize}`);
@@ -156,6 +157,7 @@ function renderHistoryTable(records) {
       <td>${safeEmail}</td>
       <td>${safeCompany}</td>
       <td>${safePosition}</td>
+      <td>${safeSolutionInterest}</td>
       <td class="lead-note-cell">${safeNote}</td>
       <td>
         <div class="staff-note-editor">
@@ -193,6 +195,7 @@ function applySearchFilter() {
       record.email,
       record.company,
       record.position,
+      record.solution_interest,
       record.note,
       record.admin_note,
       record.prize,
@@ -228,6 +231,7 @@ function exportHistoryCsv() {
     'บริษัท',
     'ตำแหน่ง',
     'ความสนใจ',
+    'IT solution ที่สนใจ',
     'หมายเหตุลูกค้า',
     'บันทึกทีมงาน',
     'รางวัล',
@@ -244,6 +248,7 @@ function exportHistoryCsv() {
     record.company,
     record.position,
     record.interest,
+    record.solution_interest || '',
     record.note || '',
     record.admin_note || '',
     record.prize,

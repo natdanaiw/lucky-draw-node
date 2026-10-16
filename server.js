@@ -293,9 +293,13 @@ app.post('/api/draw', async (req, res) => {
   const fields = req.body;
 
   // validate required fields
-  const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest'];
+  const required = ['fname', 'lname', 'phone', 'email', 'company', 'position', 'interest', 'solution_interest'];
   if (required.some(k => !fields[k])) {
     return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบ' });
+  }
+
+  if (!['Cloud solution', 'AI', 'Enterprise Infrastructure'].includes(fields.solution_interest)) {
+    return res.status(400).json({ error: 'กรุณาเลือก IT solution ที่สนใจจากตัวเลือกที่กำหนด' });
   }
 
   if (!isValidEmail(fields.email)) {
