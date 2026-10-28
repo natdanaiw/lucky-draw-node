@@ -383,7 +383,7 @@ export default {
           return json({ error: 'กรุณากรอกข้อมูลให้ครบ' }, 400);
         }
 
-        if (!['Cloud solution', 'AI', 'Enterprise Infrastructure'].includes(fields.solution_interest)) {
+        if (!['Cloud solution', 'AI', 'Enterprise Infrastructure', 'SuperApp IoT', 'App Modernization'].includes(fields.solution_interest)) {
           return json({ error: 'กรุณาเลือก IT solution ที่สนใจจากตัวเลือกที่กำหนด' }, 400);
         }
 

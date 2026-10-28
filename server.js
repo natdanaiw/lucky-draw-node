@@ -298,7 +298,7 @@ app.post('/api/draw', async (req, res) => {
     return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบ' });
   }
 
-  if (!['Cloud solution', 'AI', 'Enterprise Infrastructure'].includes(fields.solution_interest)) {
+  if (!['Cloud solution', 'AI', 'Enterprise Infrastructure', 'SuperApp IoT', 'App Modernization'].includes(fields.solution_interest)) {
     return res.status(400).json({ error: 'กรุณาเลือก IT solution ที่สนใจจากตัวเลือกที่กำหนด' });
   }
 
